@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -44,4 +46,16 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+
+
+    public function generatePhoneVerificationToken()
+    {
+        $this->phone_verification_code = Str::random(6); // Generate a new 6-character token
+        $this->pcode_expired_at = Carbon::now()->addSeconds(60); // Expiration time
+        $this->save();
+
+        // Send SMS logic here
+        // Example: Twilio::message($this->phone, "Your new verification token is {$this->phone_verification_token}");
+    }
 }

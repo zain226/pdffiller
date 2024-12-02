@@ -1,11 +1,12 @@
       <!-- Navbar Start -->
+      @php($user = auth()->user())
       <header id="topnav" class="defaultscroll sticky">
           <div class="container">
               <!-- Logo container-->
               <a class="logo" href="index.html">
-                  <img src="{{ asset('frontend/assets/images/logo-dark.png') }}" class="logo-light-mode" height="24"
+                  <img src="{{ asset('frontend/assets/images/logo-dark.png') }}" class="l-dark" height="24"
                       alt="">
-                  <img src="{{ asset('frontend/assets/images/logo-light.png') }}" height="24" class="logo-dark-mode"
+                  <img src="{{ asset('frontend/assets/images/logo-light.png') }}" height="24" class="l-light"
                       alt="">
               </a>
 
@@ -26,9 +27,19 @@
 
               <!--Login button Start-->
               <ul class="buy-button list-inline mb-0">
-                  <li class="list-inline-item mb-0">
-                      <a href="{{ route('login') }}" class="btn btn-sm btn-soft-primary text-uppercase">Login</a>
-                  </li>
+                  @if ($user)
+                      <li class="list-inline-item ps-1 mb-0 ">
+                          <a href="{{ route('user.dashboard') }}" target="_blank"
+                              class="btn btn-icon btn-pills btn-primary"><i data-feather="user"
+                                  class="fea icon-sm"></i></a>
+                      </li>
+                  @else
+                      <li class="list-inline-item mb-0">
+                          <a href="{{ route('login') }}" class="btn btn-sm btn-soft-primary text-uppercase">Login</a>
+                      </li>
+                  @endif
+
+
 
 
               </ul>
@@ -36,7 +47,8 @@
 
               <div id="navigation">
                   <!-- Navigation Menu-->
-                  <ul class="navigation-menu nav-right">
+                  @php($prefix = request()->is('user/*') ? 'light' : 'right')
+                  <ul class="navigation-menu nav-{{ $prefix }}">
                       <li><a href="{{ route('index') }}" class="sub-menu-item">Home</a></li>
 
                       <li><a href="" class="sub-menu-item">About us</a></li>

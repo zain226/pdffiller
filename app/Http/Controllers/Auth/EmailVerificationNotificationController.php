@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Notifications\VerifyEmail;
 
 class EmailVerificationNotificationController extends Controller
 {
@@ -17,8 +18,7 @@ class EmailVerificationNotificationController extends Controller
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended(RouteServiceProvider::HOME);
         }
-
-        $request->user()->sendEmailVerificationNotification();
+        $request->user()->notify(new VerifyEmail());
 
         return back()->with('status', 'verification-link-sent');
     }
