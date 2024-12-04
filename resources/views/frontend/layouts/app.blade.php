@@ -10,6 +10,7 @@
     @include('frontend.layouts.partials.header')
     <div class="">
         @yield('content')
+        <form action="{{ route('logout') }}" method="POST" id="logout-form">@csrf</form>
     </div>
     @include('frontend.layouts.partials.footer')
     @include('frontend.layouts.partials.script')

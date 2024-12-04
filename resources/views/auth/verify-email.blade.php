@@ -28,7 +28,7 @@
                                 <div class="row">
                                     <div class="col-12 text-center">
                                         <button type="submit" class="btn btn-primary">
-                                            {{ __('Resend Verification Email') }}</button>
+                                            {{ __('Send Verification Email') }}</button>
                                         </p>
                                     </div>
                                 </div>

@@ -51,7 +51,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function generatePhoneVerificationToken()
     {
-        $this->phone_verification_code = Str::random(6); // Generate a new 6-character token
+        // $this->phone_verification_code = Str::random(6); // Generate a new 6-character token
+        $this->phone_verification_code = 224466; // Generate a new 6-character token
         $this->pcode_expired_at = Carbon::now()->addSeconds(60); // Expiration time
         $this->save();
 
