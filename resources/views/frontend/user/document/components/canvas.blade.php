@@ -1,4 +1,4 @@
-<div class="offcanvas offcanvas-end shadow border-0" tabindex="-1" id="offcanvasRight"
+<div class="offcanvas canvas-custom offcanvas-end shadow border-0" tabindex="-1" id="offcanvasRight"
     aria-labelledby="offcanvasRightLabel">
     <div class="offcanvas-header p-4 border-bottom">
         <h5 id="offcanvasRightLabel" class="mb-0">

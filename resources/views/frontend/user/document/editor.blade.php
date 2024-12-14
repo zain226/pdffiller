@@ -129,13 +129,11 @@
                     <div class="file-container">
                     </div>
                 </div>
-                <div class="col-md-2 sidebar bg-dark text-white ">
-                    @include('frontend.user.document.components.esign')
-                </div>
+
             </div>
         </div>
         @include('frontend.user.document.components.canvas')
-        <div class="offcanvas offcanvas-end shadow border-0" tabindex="-1" id="offcanvasRight"
+        <div class="offcanvas canvas-esign offcanvas-end shadow border-0" tabindex="-1" id="offcanvasRight"
             aria-labelledby="offcanvasRightLabel">
             <div class="offcanvas-header p-4 border-bottom">
                 <h5 id="offcanvasRightLabel" class="mb-0">
@@ -166,6 +164,11 @@
         <script>
             $(document).on('click', '.edit-btn', function() {
                 let type = $(this).closest('.outerbox').data('type');
+                if (type == 'esign') {
+                    $('.offcanvas').removeClass('show');
+                    $('.canvas-esign').addClass('show');
+                    return;
+                }
                 $.ajax({
                     url: "{{ route('user.document.editor.get.component') }}",
                     data: {
@@ -174,7 +177,7 @@
                     method: 'get',
                     success: function(response) {
                         $('.appendBody').html(response.view)
-                        $('.offcanvas').addClass('show')
+                        $('.canvas-custom').addClass('show')
                     },
                 });
             })
@@ -276,11 +279,11 @@
                 function addSignature(dataURL) {
                     const img = document.createElement('img');
                     img.src = dataURL;
-                    img.className = 'draggable';
+                    img.className = 'draggablee';
                     img.style.width = '150px';
                     img.style.height = 'auto';
-                    $('#savedSignatures').append(img);
-                    makeDraggable(img);
+                    $('#savedSignatures').html(img);
+                    // makeDraggable(img);
                 }
 
                 // Add Drag-and-Drop Fields

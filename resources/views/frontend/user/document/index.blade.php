@@ -49,14 +49,14 @@
 @push('script')
     <script src="https://cdn.jsdelivr.net/npm/dropify@0.2.2/dist/js/dropify.min.js"></script>
     <script>
-        $('.dropify').dropify({
-            messages: {
-                'default': 'Upload Document',
-                'replace': 'Upload Document',
-                'remove': 'Remove',
-                'error': 'Ooops, something wrong happended.'
-            }
-        });
+        // $('.dropify').dropify({
+        //     messages: {
+        //         'default': 'Upload Document',
+        //         'replace': 'Upload Document',
+        //         'remove': 'Remove',
+        //         'error': 'Ooops, something wrong happended.'
+        //     }
+        // });
 
 
         $('#document').on('change', function() {
