@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\DocumentController;
+use App\Http\Controllers\User\EditorController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,12 +34,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('user')->name('user.')->group(function () {
         Route::prefix('document')->name('document.')->group(function () {
             Route::get('/upload', [DocumentController::class, 'create'])->name('upload');
+            Route::prefix('editor')->name('editor.')->group(function () {
+                Route::get('/{id?}', [EditorController::class, 'index'])->name('index');
+                Route::get('/get/component', [EditorController::class, 'getComponent'])->name('get.component');
+            });
         });
     });
 });
 
 Route::get('/testing', function () {
-    return view('testing');
+
+    return view('frontend.user.document.editor');
 });
 
 require __DIR__ . '/auth.php';

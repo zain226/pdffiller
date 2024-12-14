@@ -4,139 +4,398 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Editor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fabric@4.6.0/dist/fabric.min.js"></script>
+    <title>PDF E-Signature with Drag & Drop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.17/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- jsPDF Library -->
+    <link href="{{ asset('frontend/assets/css/bootstrap.min.css') }}" id="bootstrap-style" class="theme-opt"
+        rel="stylesheet" type="text/css">
+    <script src="{{ asset('frontend/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Option 1: Include in HTML -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
     <style>
-        #pdfCanvas {
-            border: 1px solid #000;
-            margin-bottom: 10px;
+        .file-row {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            position: relative;
         }
 
-        #signatureCanvas {
+        canvas,
+        img {
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .signature-pad {
             border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 150px;
+            background-color: #fff;
+        }
+
+        .draggable {
+            position: absolute;
+            cursor: move;
+            z-index: 10;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            text-align: center;
+            line-height: 18px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .left-sidebar {
+            padding: 20px;
+            background-color: #343a40;
+            color: white;
+            height: 100vh;
+        }
+
+        .left-sidebar .option {
+            margin-bottom: 10px;
+            cursor: grab;
+            padding: 5px 10px;
+            border: 1px dashed #ccc;
+            background-color: #495057;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .sidebar {
+            position: sticky;
+            z-index: 999;
+            top: 0;
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: -30px;
+            right: 0;
+        }
+
+        .outerbox {
+            position: relative;
+        }
+
+        .sig-out {
+            height: 50px;
+            width: 50px;
+            background: #ffd32c;
+            font-size: 26px;
+            text-align: center;
+            padding: 0px;
+            border: 2px dotted;
+            opacity: 0.8;
         }
     </style>
+
 </head>
 
 <body>
-    <h2>Document Editor</h2>
-    <canvas id="pdfCanvas"></canvas>
-    <button id="addSignature">Add Signature</button>
-    <button id="addField">Add Required Field</button>
-    <button id="addPage">Add New Page</button>
-    <button id="save">Save Document</button>
 
-    <!-- Signature Capture Canvas -->
-    <div>
-        <h4>Capture Signature</h4>
-        <canvas id="signatureCanvas" width="300" height="150"></canvas>
-        <button id="clearSignature">Clear Signature</button>
-    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar -->
+            <div class="col-md-2 sidebar bg-dark text-white left-sidebar">
+                <h5>Tools</h5>
+                <div class="option" draggable="true" data-type="date">Add Date Field</div>
+                <div class="option" draggable="true" data-type="text">Add Text Field</div>
+                <div class="option" draggable="true" data-type="radio">Add Radio Button</div>
+                <div class="option" draggable="true" data-type="check">Add Check Box Button</div>
+                <div class="option" draggable="true" data-type="signature">Add Signature File</div>
 
-    <script>
-        const pdfUrl = '{{ asset('frontend/uploads/merged.pdf') }}'; // Your PDF path
-        const pdfCanvas = document.getElementById('pdfCanvas');
-        const pdfContext = pdfCanvas.getContext('2d');
-        let fabricCanvas = null;
-        let pdfDocument = null;
-        let currentPage = 1;
+                <button id="downloadPDF" class="btn btn-primary mt-3 w-100
+                ">Download File </button>
 
-        // Load PDF.js
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            </div>
 
-        // Render PDF page
-        function renderPDFPage(pageNumber) {
-            pdfDocument.getPage(pageNumber).then(page => {
-                const viewport = page.getViewport({
-                    scale: 1.5
-                });
-                pdfCanvas.width = viewport.width;
-                pdfCanvas.height = viewport.height;
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div>
+                    <div class="text-center mb-4">
+                        <h3>Unified Display</h3>
+                    </div>
+                    <div class="file-container">
+                        <!-- Dynamically display files -->
+                    </div>
+                </div>
 
-                const renderContext = {
-                    canvasContext: pdfContext,
-                    viewport: viewport
-                };
-                page.render(renderContext).promise.then(() => {
-                    if (!fabricCanvas) {
-                        fabricCanvas = new fabric.Canvas('pdfCanvas', {
-                            backgroundColor: null
-                        });
+                <!-- Right Sidebar -->
+                <div class="col-md-2 sidebar bg-dark text-white ">
+                    <h4>E-Signature</h4>
+                    <canvas id="signaturePad" style="border: 1px solid #ddd; width: 100%; height: 200px;"></canvas>
+                    <button id="clearSignature">Clear</button>
+                    <button id="saveSignature">Save Signature</button>
+                    <br><br>
+                    <h5>Upload Signature</h5>
+                    <input type="file" id="uploadSignature" accept="image/*">
+                    <div id="savedSignatures" style="margin-top: 20px;">
+                        <!-- Saved or uploaded signatures will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="offcanvas offcanvas-end shadow border-0" tabindex="-1" id="offcanvasRight"
+            aria-labelledby="offcanvasRightLabel">
+            <div class="offcanvas-header p-4 border-bottom">
+                <h5 id="offcanvasRightLabel" class="mb-0">
+                    Customization
+                </h5>
+                <button type="button" class="btn-close d-flex align-items-center text-dark" data-bs-dismiss="offcanvas"
+                    aria-label="Close"><i class="bi bi-x-circle"></i></button>
+            </div>
+            <div class="offcanvas-body p-4">
+                <div class="row">
+                    <div class="col-12">
+                        <img src="assets/images/contact.svg" class="img-fluid d-block mx-auto" alt="">
+                        <div class="card border-0 mt-4" style="z-index: 1">
+                            <div class="card-body p-0">
+                                <div class="editor-sig editor">
+
+                                </div>
+                                <div class="editor-date editor">
+                                    <label class="form-label">Height</label>
+                                    <div class=" position-relative">
+                                        <input type="number" class="form-control height">
+                                    </div>
+                                    <label class="form-label">Width</label>
+                                    <div class=" position-relative">
+                                        <input type="number" class="form-control width ">
+                                    </div>
+                                    <label class="form-label">Date</label>
+                                    <div class=" position-relative">
+                                        <input type="date" class="form-control cus_date ">
+                                    </div>
+
+                                    <button class="btn btn-primary apply w-100 mt-4">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="offcanvas-footer p-4 border-top text-center">
+            </div>
+        </div>
+        @php($now = now())
+        <script>
+            $(document).on('click', '.edit-btn', function() {
+                $('.offcanvas').addClass('show')
+            })
+            $(document).on('click', '.btn-close', function() {
+                $(this).closest('.offcanvas').removeClass('show');
+            })
+            $(document).ready(function() {
+                // Attach hover functionality to elements with the .outerbox class
+                $(document).on({
+                    mouseenter: function() {
+                        // On hover, append the edit button
+                        if ($(this).find(".edit-btn").length === 0) {
+                            $(this).append(
+                                '<button class="btn btn-primary btn-sm edit-btn"><i class="bi bi-pencil-square"></i></button>'
+                            );
+                        }
+                    },
+                    mouseleave: function() {
+                        // On hover out, remove the edit button
+                        $(this).find(".edit-btn").remove();
+                    },
+                }, '.outerbox'); // Specify the target element selector
+            });
+            $(document).ready(function() {
+
+
+
+                const signaturePad = new SignaturePad(document.getElementById('signaturePad'));
+                const files = [{
+                        type: 'image',
+                        path: '{{ asset('frontend/uploads/image.jpg') }}'
+                    },
+                    {
+                        type: 'pdf',
+                        path: '{{ asset('frontend/uploads/pdf.pdf') }}'
+                    },
+                ];
+                const container = $('.file-container');
+
+                // Render Files Dynamically
+                files.forEach((file) => {
+                    if (file.type === 'image') {
+                        const imgRow = `<div class="file-row"><img src="${file.path}" alt="Image"></div>`;
+                        container.append(imgRow);
+                    } else if (file.type === 'pdf') {
+                        fetch(file.path)
+                            .then((res) => res.arrayBuffer())
+                            .then((buffer) => {
+                                pdfjsLib.getDocument(buffer).promise.then((pdf) => {
+                                    for (let i = 1; i <= pdf.numPages; i++) {
+                                        pdf.getPage(i).then((page) => {
+                                            const viewport = page.getViewport({
+                                                scale: 1
+                                            });
+                                            const canvas = document.createElement('canvas');
+                                            canvas.height = viewport.height;
+                                            canvas.width = viewport.width;
+
+                                            const renderContext = {
+                                                canvasContext: canvas.getContext('2d'),
+                                                viewport: viewport,
+                                            };
+                                            page.render(renderContext).promise.then(() => {
+                                                container.append(
+                                                    `<div class="file-row"></div>`
+                                                ).append(canvas);
+                                            });
+                                        });
+                                    }
+                                });
+                            });
                     }
                 });
-            });
-        }
+                // Clear Signature Pad
+                $('#clearSignature').click(() => signaturePad.clear());
 
-        // Load PDF
-        pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
-            pdfDocument = pdf;
-            renderPDFPage(currentPage);
-        });
-
-        // Signature Canvas
-        const signatureCanvas = document.getElementById('signatureCanvas');
-        const signatureContext = signatureCanvas.getContext('2d');
-        let signatureDrawing = false;
-
-        signatureCanvas.addEventListener('mousedown', () => (signatureDrawing = true));
-        signatureCanvas.addEventListener('mouseup', () => (signatureDrawing = false));
-        signatureCanvas.addEventListener('mousemove', (e) => {
-            if (signatureDrawing) {
-                signatureContext.lineTo(e.offsetX, e.offsetY);
-                signatureContext.stroke();
-            }
-        });
-
-        document.getElementById('clearSignature').addEventListener('click', () => {
-            signatureContext.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-        });
-
-        // Add Signature to Fabric Canvas
-        document.getElementById('addSignature').addEventListener('click', () => {
-            const signatureDataUrl = signatureCanvas.toDataURL();
-            fabric.Image.fromURL(signatureDataUrl, (img) => {
-                img.set({
-                    left: 100,
-                    top: 100,
-                    scaleX: 0.5,
-                    scaleY: 0.5
+                // Save Signature
+                $('#saveSignature').click(() => {
+                    if (!signaturePad.isEmpty()) {
+                        addSignature(signaturePad.toDataURL());
+                    }
                 });
-                fabricCanvas.add(img);
-            });
-        });
 
-        // Add Required Field
-        document.getElementById('addField').addEventListener('click', () => {
-            const fieldName = prompt('Enter field name:');
-            if (fieldName) {
-                const field = new fabric.Textbox(fieldName, {
-                    left: 100,
-                    top: 100,
-                    width: 200,
-                    fontSize: 16,
-                    editable: true
+                // Upload Signature
+                $('#uploadSignature').on('change', function() {
+                    const file = this.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            addSignature(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        alert('Please upload a valid image file.');
+                    }
                 });
-                fabricCanvas.add(field);
-            }
-        });
 
-        // Add a New Page
-        document.getElementById('addPage').addEventListener('click', () => {
-            pdfCanvas.width = 600;
-            pdfCanvas.height = 800;
-            pdfContext.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-            fabricCanvas.clear();
-        });
+                // Add Signature
+                function addSignature(dataURL) {
+                    const img = document.createElement('img');
+                    img.src = dataURL;
+                    img.className = 'draggable';
+                    img.style.width = '150px';
+                    img.style.height = 'auto';
+                    $('#savedSignatures').append(img);
+                    makeDraggable(img);
+                }
 
-        // Save Document
-        document.getElementById('save').addEventListener('click', () => {
-            const json = fabricCanvas.toJSON();
-            console.log('Canvas data:', json);
-            alert('Save functionality is under development!');
-        });
-    </script>
+                // Add Drag-and-Drop Fields
+                $('.option').on('dragstart', function(e) {
+                    e.originalEvent.dataTransfer.setData('type', $(this).data('type'));
+                });
+
+                $('.file-container').on('dragover', function(e) {
+                    e.preventDefault();
+                });
+
+                $('.file-container').on('drop', function(e) {
+                    e.preventDefault();
+
+                    const type = e.originalEvent.dataTransfer.getData('type');
+                    const containerOffset = $(this).offset();
+                    const dropX = e.originalEvent.pageX - containerOffset.left;
+                    const dropY = e.originalEvent.pageY - containerOffset.top;
+                    addField(type, dropX, dropY);
+                });
+
+                function addField(type, x, y) {
+                    const field = document.createElement('div');
+                    field.className = 'draggable';
+                    field.style.position = 'absolute'; // Ensures positioning relative to the container
+                    field.style.left = `${x}px`;
+                    field.style.top = `${y}px`;
+
+                    switch (type) {
+                        case 'date':
+                            field.innerHTML =
+                                '<div class="date-box outerbox"><input type="text" class="form-control date" value="{{ $now }}"></div>';
+                            break;
+                        case 'text':
+                            field.innerHTML =
+                                '<div class="text-box outerbox"><input type="text" class="form-control text"></div>';
+                            break;
+                        case 'radio':
+                            field.innerHTML =
+                                '<div class="radio-box outerbox"><input type="checkbox" class=" "> Radio</div>';
+                            break;
+                        case 'check':
+                            field.innerHTML =
+                                '<div class="check-box outerbox"><input type="checkbox" class=" "> Check box</div>';
+                            break;
+                        case 'signature':
+                            field.innerHTML = '<div class="sig-out outerbox"><i class="bi bi-pen-fill"></i></div>';
+                            break;
+                        case 'signaturee':
+                            field.textContent = 'Signature Placeholder';
+                            break;
+                    }
+
+                    $('.file-container').append(field);
+                    makeDraggable(field);
+                }
+
+
+                // Draggable Functionality
+                function makeDraggable(element) {
+                    interact(element).draggable({
+                        listeners: {
+                            move(event) {
+                                const {
+                                    target,
+                                    dx,
+                                    dy
+                                } = event;
+                                const x = (parseFloat(target.dataset.x) || 0) + dx;
+                                const y = (parseFloat(target.dataset.y) || 0) + dy;
+
+                                target.style.transform = `translate(${x}px, ${y}px)`;
+                                target.dataset.x = x;
+                                target.dataset.y = y;
+                            },
+                        },
+                    });
+
+                    // Add Delete Button
+                    // const deleteBtn = document.createElement('button');
+                    // deleteBtn.className = 'delete-btn';
+                    // deleteBtn.innerHTML = '&times;';
+                    // deleteBtn.onclick = () => element.remove();
+                    // element.append(deleteBtn);
+                }
+            });
+        </script>
+
 </body>
 
 </html>
